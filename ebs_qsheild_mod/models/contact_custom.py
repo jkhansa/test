@@ -112,8 +112,10 @@ class ContactCustom(models.Model):
         default=_sponsor_default,
         domain=sponsor_domain)
 
-    @api.depends('name')
+    @api.depends('is_company', 'name', 'parent_id.name', 'type', 'company_name')
+    @api.depends_context('show_address', 'show_address_only', 'show_email', 'html_format', 'show_vat')
     def _compute_display_name(self):
+        self.ensure_one()
         self.display_name = self.name
 
     @api.onchange('person_type')
@@ -140,14 +142,15 @@ class ContactCustom(models.Model):
                 if not vals['sponsor']:
                     bool_create_sponsor = True
             if bool_create_sponsor:
-                if vals['person_type'] == 'company':
-                    res.sponsor = res.id
-                if vals['person_type'] == 'visitor' or vals['person_type'] == 'emp':
-                    if res.parent_id:
-                        res.sponsor = res.parent_id.id
-                if vals['person_type'] == 'child':
-                    if res.related_parent:
-                        res.sponsor = res.related_parent.id
+                if 'person_type' in vals:
+                    if vals['person_type'] == 'company':
+                        res.sponsor = res.id
+                    if vals['person_type'] == 'visitor' or vals['person_type'] == 'emp':
+                        if res.parent_id:
+                            res.sponsor = res.parent_id.id
+                    if vals['person_type'] == 'child':
+                        if res.related_parent:
+                            res.sponsor = res.related_parent.id
         return res
 
     def write(self, vals):
