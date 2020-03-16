@@ -115,8 +115,8 @@ class ContactCustom(models.Model):
     @api.depends('is_company', 'name', 'parent_id.name', 'type', 'company_name')
     @api.depends_context('show_address', 'show_address_only', 'show_email', 'html_format', 'show_vat')
     def _compute_display_name(self):
-        self.ensure_one()
-        self.display_name = self.name
+        for rec in self:
+            self.display_name = self.name
 
     @api.onchange('person_type')
     def _person_type_change(self):
